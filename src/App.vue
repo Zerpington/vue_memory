@@ -1,39 +1,44 @@
 <template>
   <div id="app">
 
-    <div class="game-header" v-if="!gameStarted">
-      <h1>Vue Memory Game</h1>
+    <div class="game-title">Vue Memory Game</div>
 
-      <div id="start-game" @click="startGame">
+    <div class="game-container">
+      <div
+        id="start-game"
+        @click="startGame"
+        v-if="!gameStarted"
+      >
         START
       </div>
 
-    </div>
+      <div class="difficulty-container" v-if="gameStarted && chooseDifficulty">
+        <div class="button green" @click="setDifficulty('easy')">
+          Easy (4 x 4)
+        </div>
+        <div class="button blue" @click="setDifficulty('medium')">
+          Medium (6 x 6)
+        </div>
+        <div class="button red" @click="setDifficulty('hard')">
+          Hard (8 x 8)
+        </div>
+      </div>
 
-    <div id="card-container" v-if="gameStarted">
-      <div class="card-row">
-        <div class="card-column" @click="firstOne">{{ fOne }}</div>
-        <div class="card-column" @click="firstTwo">{{ fTwo }}</div>
-        <div class="card-column" @click="firstThree">{{ fThree }}</div>
-        <div class="card-column" @click="firstFour">{{ fFour }}</div>
-      </div>
-      <div class="card-row">
-        <div class="card-column" @click="secondOne">{{ sOne }}</div>
-        <div class="card-column" @click="secondTwo">{{ sTwo }}</div>
-        <div class="card-column" @click="secondThree">{{ sThree }}</div>
-        <div class="card-column" @click="secondFour">{{ sFour }}</div>
-      </div>
-      <div class="card-row">
-        <div class="card-column" @click="firstFive">{{ fFive }}</div>
-        <div class="card-column" @click="firstSix">{{ fSix }}</div>
-        <div class="card-column" @click="firstSeven">{{ fSeven }}</div>
-        <div class="card-column" @click="firstEight">{{ fEight }}</div>
-      </div>
-      <div class="card-row">
-        <div class="card-column" @click="secondFive">{{ sFive }}</div>
-        <div class="card-column" @click="secondSix">{{ sSix }}</div>
-        <div class="card-column" @click="secondSeven">{{ sSeven }}</div>
-        <div class="card-column" @click="secondEight">{{ sEight }}</div>
+      <div :class="difficultyClass" v-if="gameStarted && !chooseDifficulty">
+        <div
+          v-for="(card, index) in memoryCards" :key="index"
+          class="memory-card"
+        >
+          <div v-if="cardMask[index]">
+            {{ card }}
+          </div>
+
+          <div
+            class="covered-card"
+            v-if="!cardMask[index]"
+            @click="unmaskCard(index)"
+          />
+        </div>
       </div>
     </div>
 
@@ -47,143 +52,197 @@ export default {
   data: function () {
     return {
       gameStarted: false,
-      memoryNum: null,
-      fOne: null,
-      fTwo:null,
-      fThree:null,
-      fFour:null,
-      fFive:null,
-      fSix:null,
-      fSeven:null,
-      fEight:null,
-      sOne:null,
-      sTwo:null,
-      sThree:null,
-      sFour:null,
-      sFive:null,
-      sSix:null,
-      sSeven:null,
-      sEight:null,
+      chooseDifficulty: false,
+      memoryCards: [],
+      cardMask: [],
+      difficulty: "easy",
+      unmaskStack: []
+    }
+  },
+
+  computed: {
+    difficultyClass () {
+      if (this.difficulty === "easy"){
+        return "small-board game-board"
+      } else if (this.difficulty === "medium") {
+        return "medium-board game-board"
+      } else {
+        return "large-board game-board"
+      }
     }
   },
 
   methods: {
     startGame () {
       this.gameStarted = true
-      this.shuffleCards()
+      this.chooseDifficulty = true
     },
+
     endGame () {
       this.gameStarted = false
     },
 
-    //shuffleCards () {
-    //var cards = (".card-column");
-    //  for(var i = 0; i < cards.length; i++) {
-    //      var target = Math.floor(Math.random() * cards.length -1) + 1;
-    //      var target2 = Math.floor(Math.random() * cards.length -1) + 1;
-    //      $(":cards.eq(target)".before(":cards.eq(target2)")
-    //  }
-    //},
+    setDifficulty(difficulty) {
+      this.chooseDifficulty = false
+      this.difficulty = difficulty
 
-    firstOne () {
-      if(this.fOne == null){
-        this.fOne = 1
-      } else {
-        this.fOne = null
-      }
-
-    },
-    secondOne () {
-      if(this.sOne == null){
-        this.sOne = 1
-      } else {
-        this.sOne = null
+      if (difficulty === "easy") {
+        this.inititalizeCards(16)
+      } else if (difficulty === "medium") {
+        this.inititalizeCards(36)
+      } else if (difficulty === "hard") {
+        this.inititalizeCards(64)
       }
     },
-    firstTwo () {
-      if(this.fTwo == null){
-        this.fTwo = 2
-      } else {
-        this.fTwo = null
+
+    inititalizeCards(number) {
+      const cards = []
+      const mask = []
+      for (let i = 1; i <= number/2; i++) {
+        cards.push(i)
+        cards.push(i)
+        mask.push(false)
+        mask.push(false)
       }
-    },
-    secondTwo () {
-      if(this.sTwo == null){
-        this.sTwo = 1
-      } else {
-        this.sTwo = null
+
+      const SHUFFLE_COUNT = 4
+
+      for (let i = 0; i < SHUFFLE_COUNT; i++) {
+        for (let j = 0; j < number; j++) {
+          const rand = Math.floor((Math.random() * number))
+          const temp = cards[rand]
+          cards[rand] = cards[j]
+          cards[j] = temp
+        }
       }
-    },
-    firstThree (){
-      this.fThree =3
 
-    },
-    secondThree () {
-      this.sThree =3
-
-    },
-    firstFour (){
-      this.fFour =4
-    },
-    secondFour () {
-      this.sFour =4
-
-    },
-    firstFive () {
-      this.fFive =5
-
-    },
-    secondFive () {
-      this.sFive =5
-
-    },
-    firstSix () {
-      this.fSix =6
-
-    },
-    secondSix () {
-      this.sSix =6
-
-    },
-    firstSeven () {
-      this.fSeven =7
-
-    },
-    secondSeven () {
-      this.sSeven =7
-
-    },
-    firstEight () {
-      this.fEight =8
-
-    },
-    secondEight () {
-      this.sEight =8
-
+      this.memoryCards = cards
+      this.cardMask = mask
     },
 
+    unmaskCard(index) {
+      this.$set(this.cardMask, index, true)
+      this.unmaskStack.push(index)
+
+      if (this.unmaskStack.length == 2) {
+        setTimeout(() => {
+          const x = this.unmaskStack[0]
+          const y = this.unmaskStack[1]
+          if (this.memoryCards[x] != this.memoryCards[y]) {
+            for (let i = 0; i < this.unmaskStack.length; i++) {
+              const index = this.unmaskStack[i]
+              this.$set(this.cardMask, index, false)
+            }
+          }
+
+          this.unmaskStack = []
+        }, 1000)
+      }
+    }
   }
 }
 </script>
 
 <style>
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+  background-color: antiquewhite;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
 }
 
-.game-header {
-  position: relative;
+.game-title {
+  font-size: 2em;
+  font-weight: 300;
+  padding-top: 1em;
+}
+
+.game-container {
+  display: flex;
+  flex-grow: 1;
+  justify-content: center;
+}
+
+.difficulty-container {
+  display: flex;
   align-items: center;
-  margin: auto;
-  top: 50%;
-  background-color: antiquewhite;
-  border-radius: 1em;
-  width: 350px;
-  height: auto;
+}
+
+.red {
+  background-color: red;
+  color: white
+}
+
+.green {
+  background-color: green;
+  color: white;
+}
+
+.blue {
+  background-color: blue;
+  color: white;
+}
+
+.button {
+  padding: 1em;
+  margin: 10px;
+  border-radius: 0.5em;
+}
+
+.button:hover {
+  cursor: pointer;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.game-board {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.small-board {
+  width: 500px;
+}
+
+.medium-board {
+  width: 700px;
+}
+
+.large-board {
+  width: 900px;
+}
+
+.memory-card {
+  width: 100px;
+  margin: 5px;
+  border: 1px solid black;
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.memory-card:hover {
+  cursor: pointer;
+}
+
+.covered-card {
+  background-color: pink;
+  width: 100px;
+  height: 100%;
+  border-radius: 10px;
 }
 
 #start-game {
