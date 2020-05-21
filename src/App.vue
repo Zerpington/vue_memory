@@ -24,6 +24,13 @@
         </div>
       </div>
 
+      <div class="end-game" @click="startGame" v-if="wonGame">
+        <div>
+          <img src="../chika.gif">
+        </div>
+        Play Again?
+      </div>
+
       <div :class="difficultyClass" v-if="gameStarted && !chooseDifficulty">
         <div
           v-for="(card, index) in memoryCards" :key="index"
@@ -56,7 +63,10 @@ export default {
       memoryCards: [],
       cardMask: [],
       difficulty: "easy",
-      unmaskStack: []
+      unmaskStack: [],
+      wonGame: false,
+      openCards: 0,
+      winBanner: null,
     }
   },
 
@@ -76,6 +86,9 @@ export default {
     startGame () {
       this.gameStarted = true
       this.chooseDifficulty = true
+      this.wonGame = false
+      this.openCards = 0
+
     },
 
     endGame () {
@@ -121,24 +134,41 @@ export default {
     },
 
     unmaskCard(index) {
+
+
+      if (this.unmaskStack.length === 2) {
+        const x = this.unmaskStack[0]
+        const y = this.unmaskStack[1]
+        if (this.memoryCards[x] != this.memoryCards[y]) {
+          for (let i = 0; i < this.unmaskStack.length; i++) {
+            const index = this.unmaskStack[i]
+            this.$set(this.cardMask, index, false)
+          }
+        }
+      }
+      if (this.unmaskStack.length > 1) {
+        this.unmaskStack = []
+      }
       this.$set(this.cardMask, index, true)
       this.unmaskStack.push(index)
+      this.winCondtion()
+    },
 
-      if (this.unmaskStack.length == 2) {
-        setTimeout(() => {
-          const x = this.unmaskStack[0]
-          const y = this.unmaskStack[1]
-          if (this.memoryCards[x] != this.memoryCards[y]) {
-            for (let i = 0; i < this.unmaskStack.length; i++) {
-              const index = this.unmaskStack[i]
-              this.$set(this.cardMask, index, false)
-            }
+    winCondtion(){
+      this.openCards = 0
+      for (let i = 0; i < this.cardMask.length; i++){
+        if(this.cardMask[i] == true){
+          this.openCards++
+
           }
+      if (this.openCards == this.cardMask.length) {
+        this.wonGame = true
 
-          this.unmaskStack = []
-        }, 1000)
+        }
       }
-    }
+
+    },
+
   }
 }
 </script>
@@ -160,6 +190,20 @@ html, body {
 
   display: flex;
   flex-direction: column;
+}
+
+.end-game {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  height: auto;
+  width: auto;
+  background-color: pink;
+  padding: 10px;
+  font-size: 20px;
+  border: solid;
+  border-radius: .5em;
+  color: green;
 }
 
 .game-title {
